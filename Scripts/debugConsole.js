@@ -59,6 +59,30 @@ function onMessage(ortc, channel, message) {
     }
 };
 
+function onMessageWithFilter(ortc, channel, filtered, message) {
+    switch (channel) {
+        case 'ortcClientConnected':
+            log('A CLIENT CONNECTED: ' + message);
+            break;
+        case 'ortcClientDisconnected':
+            log('A CLIENT DISCONNECTED: ' + message);
+            break;
+        case 'ortcClientSubscribed':
+            log('A CLIENT SUBSCRIBED: ' + message);
+            break;
+        case 'ortcClientUnsubscribed':
+            log('A CLIENT UNSUBSCRIBED: ' + message);
+            break;
+        default:
+            log('RECEIVED AT ' + channel + ': ' + message);
+            break;
+    }
+
+    if(!filtered) {
+        log('WARNING: SERVER WAS NOT ABLE TO SUCCESSFULLY FILTER THE MESSAGE');
+    }
+};
+
 function onException(ortc, event) {
     log('EXCEPTION: ' + event);
 };
@@ -185,10 +209,17 @@ function Presence() {
 
 function Subscribe() {
     var channel = $('#' + controlsPrefix + 'txtChannel').val();
+    var filter = $('#' + controlsPrefix + 'txtFilter').val();
     
     log('SUBSCRIBING TO: ' + channel + '...');
-
-    ortcObj.subscribe(channel, true, function (ortc, channel, message) { onMessage(ortc, channel, message); });    
+    if(filter) {
+        log('WITH SUBSCRIPTION FILTER: ' + filter);
+        ortcObj.subscribeWithFilter(channel, true, filter, function (ortc, channel, filtered, message) { 
+            onMessageWithFilter(ortc, channel, filtered, message); 
+        }); 
+    } else {
+        ortcObj.subscribe(channel, true, function (ortc, channel, message) { onMessage(ortc, channel, message); }); 
+    }   
 };
 
 function Unsubscribe() {
