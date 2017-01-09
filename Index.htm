@@ -88,6 +88,9 @@
                     Channel
                 </td>
                 <td>
+                    Subscriber ID
+                </td>
+                <td>
                     Announcement Subchannel
                 </td>            
             </tr>            
@@ -96,42 +99,37 @@
                     <input name="Connection1$txtChannel" type="text" value="MyChannel" id="Connection1_txtChannel" style="width:95%;" />
                 </td>
                 <td>
+                    <input name="Connection1$txtSubscriberId" type="text" id="Connection1_txtSubscriberId" style="width:94%;" />
+                </td>
+                <td>
                     <input name="Connection1$txtAnnouncementSubChannel" type="text" id="Connection1_txtAnnouncementSubChannel" style="width:94%;" />
                 </td>
-               
             </tr>
              <tr>
-                <td colspan="5">
-                    Subscription filter:
+                <td colspan="3">
+                    Subscription filter
                 </td>
             </tr>
              <tr>
-                <td colspan="5">
+                <td colspan="3">
                     <textarea name="Connection1$txtFilter" rows="2" cols="20" id="Connection1_txtFilter" style="width:99%;"></textarea>
                 </td>
             </tr>
             <tr>
-                <td colspan="5">
+                <td colspan="3">
                     Message
                 </td>
             </tr>
             <tr>
-                <td colspan="5">
+                <td colspan="3">
                     <textarea name="Connection1$txtMessage" rows="3" cols="20" id="Connection1_txtMessage" style="width:99%;">
 This is the message.</textarea>
                 </td>
             </tr>
             <tr>
                 <td colspan="3">
-                    <div id="Connection1_UpdatePanel2">
-		
-                            Is subscribed to the channel
-                            <input name="Connection1$txtChannelSubscribed" type="text" value="MyChannel" id="Connection1_txtChannelSubscribed" style="width:100px;" />
-                            ?
-                            &nbsp;
-                            <input type="Button" Value="Check" class="button" style="width:80px;" onclick="IsSubscribed();" />
-                        
-	</div>
+                    Publish TTL (seconds):
+                    <input name="Connection1$txtTTL" type="text" value="60" id="Connection1_txtTTL" style="width:100px;" />     
                 </td>
             </tr>
         </table>
@@ -151,8 +149,13 @@ This is the message.</textarea>
 							<input type="Button" Value="Send" class="button" style="width:100px;" onclick="Send();" />                            
                         </td>
                         <td style="width:110px">
-							<input type="Button" Value="Unsubscribe" class="button" style="width:100px;" onclick="Unsubscribe();" />                            
+                            <input type="Button" Value="Publish" class="button" style="width:100px;" onclick="Publish();" />                            
                         </td>
+                        <td style="width:110px">
+                            <input type="Button" Value="Unsubscribe" class="button" style="width:100px;" onclick="Unsubscribe();" />                            
+                        </td>
+                    </tr>
+                    <tr>
                         <td style="width:110px">
 							<input type="Button" Value="Disconnect" class="button" style="width:100px;" onclick="Disconnect();" />                            
                         </td>
@@ -166,8 +169,6 @@ This is the message.</textarea>
 	</div>
 
 </div>
-
-        <input type="hidden" name="Logger1$Collapsiblepanelextender1_ClientState" id="Logger1_Collapsiblepanelextender1_ClientState" />
 
 <div id="Logger1_pHeader" class="collapsiblePanelTitle">	    
     Log

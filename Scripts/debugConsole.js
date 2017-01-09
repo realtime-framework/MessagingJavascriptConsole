@@ -9,26 +9,20 @@ window.onload = function () {
 
     appKey = $('#' + controlsPrefix + 'txtApplicationKey').val();
     authToken = $('#' + controlsPrefix + 'txtAuthToken').val();
-        
-    loadOrtcFactory(IbtRealTimeSJType, function (factory, error) {    
-        if (error != null) {
-            alert('Factory error: ' + error.message);
-        } else {
-            // Create ORTC client
-            ortcObj = factory.createClient();
+    
+    // Create ORTC client
+    ortcObj = RealtimeMessaging.createClient();
 
-            ortcObj.setId('ortcDebugConsole');
-            ortcObj.setConnectionTimeout(5000);
+    ortcObj.setId('ortcDebugConsole');
+    ortcObj.setConnectionTimeout(5000);
 
-            ortcObj.onConnected = function (ortc) { onConnected(ortc); };
-            ortcObj.onDisconnected = function (ortc) { onDisconnected(ortc); };
-            ortcObj.onSubscribed = function (ortc, channel) { onSubscribed(ortc, channel); };
-            ortcObj.onUnsubscribed = function (ortc, channel) { onUnsubscribed(ortc, channel); };
-            ortcObj.onException = function (ortc, event) { onException(ortc, event); };
-            ortcObj.onReconnecting = function (ortc) { onReconnecting(ortc); };
-            ortcObj.onReconnected = function (ortc) { onReconnected(ortc); };
-        }
-    });
+    ortcObj.onConnected = function (ortc) { onConnected(ortc); };
+    ortcObj.onDisconnected = function (ortc) { onDisconnected(ortc); };
+    ortcObj.onSubscribed = function (ortc, channel) { onSubscribed(ortc, channel); };
+    ortcObj.onUnsubscribed = function (ortc, channel) { onUnsubscribed(ortc, channel); };
+    ortcObj.onException = function (ortc, event) { onException(ortc, event); };
+    ortcObj.onReconnecting = function (ortc) { onReconnecting(ortc); };
+    ortcObj.onReconnected = function (ortc) { onReconnected(ortc); };
 };
 
 function onSubscribed(ortc, channel) {
@@ -39,7 +33,12 @@ function onUnsubscribed(ortc, channel) {
     log('UNSUBSCRIBED FROM: ' + channel);
 };
 
-function onMessage(ortc, channel, message) {
+function onMessageWithOptions(ortc, msgOptions) {
+    var channel = msgOptions.channel;
+    var seqId = msgOptions.seqId;
+    var filtered = msgOptions.filtered;
+    var message = msgOptions.message;
+
     switch (channel) {
         case 'ortcClientConnected':
             log('A CLIENT CONNECTED: ' + message);
@@ -54,31 +53,17 @@ function onMessage(ortc, channel, message) {
             log('A CLIENT UNSUBSCRIBED: ' + message);
             break;
         default:
-            log('RECEIVED AT ' + channel + ': ' + message);
-            break;
-    }
-};
-
-function onMessageWithFilter(ortc, channel, filtered, message) {
-    switch (channel) {
-        case 'ortcClientConnected':
-            log('A CLIENT CONNECTED: ' + message);
-            break;
-        case 'ortcClientDisconnected':
-            log('A CLIENT DISCONNECTED: ' + message);
-            break;
-        case 'ortcClientSubscribed':
-            log('A CLIENT SUBSCRIBED: ' + message);
-            break;
-        case 'ortcClientUnsubscribed':
-            log('A CLIENT UNSUBSCRIBED: ' + message);
-            break;
-        default:
-            log('RECEIVED AT ' + channel + ': ' + message);
+            var logStr = 'RECEIVED AT ' + channel 
+            logStr += ': ' + message;
+            
+            if(seqId) {
+                logStr += ' WITH SEQID: ' + seqId;
+            }
+            log(logStr);
             break;
     }
 
-    if(!filtered) {
+    if(filtered === false) {
         log('WARNING: SERVER WAS NOT ABLE TO SUCCESSFULLY FILTER THE MESSAGE');
     }
 };
@@ -163,6 +148,23 @@ function Send() {
     ortcObj.send(channel, message);
 };
 
+function Publish() {
+    var channel = $('#' + controlsPrefix + 'txtChannel').val();
+    var message = $('#' + controlsPrefix + 'txtMessage').val();
+    var ttl = $('#' + controlsPrefix + 'txtTTL').val();
+
+    var ttl = parseInt(ttl);
+    log('PUBLISHING TO ' + channel + ' WITH TTL: ' + ttl + ' SECONDS');
+
+    ortcObj.publish(channel, message, ttl, function(err, msgSeqId) {
+        if(err) {
+            log('ERROR PUBLISHING: ' + message + ' TO ' + channel + ' ERROR: ' + err);
+        } else {
+            log('PUBLISHED TO ' + channel + ' WITH SEQID: ' + msgSeqId);
+        }
+    });
+};
+
 function Presence() {
     log('Requesting presence...');
 
@@ -210,16 +212,21 @@ function Presence() {
 function Subscribe() {
     var channel = $('#' + controlsPrefix + 'txtChannel').val();
     var filter = $('#' + controlsPrefix + 'txtFilter').val();
+    var subscriberId = $('#' + controlsPrefix + 'txtSubscriberId').val();
     
     log('SUBSCRIBING TO: ' + channel + '...');
-    if(filter) {
-        log('WITH SUBSCRIPTION FILTER: ' + filter);
-        ortcObj.subscribeWithFilter(channel, true, filter, function (ortc, channel, filtered, message) { 
-            onMessageWithFilter(ortc, channel, filtered, message); 
-        }); 
-    } else {
-        ortcObj.subscribe(channel, true, function (ortc, channel, message) { onMessage(ortc, channel, message); }); 
-    }   
+
+    var options = {
+        channel: channel, 
+        subscribeOnReconnected: true,  
+        filter: filter, 
+        subscriberId: subscriberId
+    }
+
+    log('WITH SUBSCRIPTION OPTIONS: ' + JSON.stringify(options));
+    ortcObj.subscribeWithOptions(options, function (ortc, msgOptions) {
+        onMessageWithOptions(ortc, msgOptions); 
+    }); 
 };
 
 function Unsubscribe() {
